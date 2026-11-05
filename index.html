@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Minute One</title>
+<meta name="description" content="A playable TikTok Shop support shift by Timothy Adetunji. Unofficial project with simulated data.">
+<meta property="og:title" content="Minute One">
+<meta property="og:description" content="A playable TikTok Shop support shift. One-minute first reply, 30 open tickets, no ticket without its fields.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111'/%3E%3Cpath d='M12 8h6v16h-5V13h-1z' fill='%23fafafa'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Martian+Mono:wdth,wght@75..112.5,300..600&display=swap">
+<style>
+/* Ledger on paper. Ink only. Red means a clock ran out, and nothing else. */
+:root{
+  color-scheme:light;
+  --paper:#fafafa;--ink:#141414;--mute:#6b6b6b;--line:rgba(20,20,20,.16);--hover:rgba(20,20,20,.05);--late:#c4122f;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --mono:"Martian Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;border-radius:0}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 12.5px/1.65 var(--mono);font-stretch:87.5%;font-variant-numeric:tabular-nums}
+button,textarea,input{font:inherit;font-stretch:inherit;color:inherit;background:none}
+h1,h2,h3,p{margin:0}
+a{color:inherit;text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding-block:28px 56px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.lab{font-size:10.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);line-height:1.7}
+.ink{color:var(--ink)}
+
+.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid var(--line)}
+h1{font:800 44px/1 var(--display);letter-spacing:-.01em;text-transform:uppercase;margin-bottom:6px}
+.stamp{border:1px solid var(--line);padding:5px 10px;font-size:11px;letter-spacing:.06em;white-space:nowrap}
+
+.head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:24px 56px;padding-block:22px;border-bottom:1px solid var(--line);align-items:end}
+.big{font:800 clamp(88px,11vw,132px)/.92 var(--display);letter-spacing:-.015em;margin:4px 0 6px}
+.big.late,.num.late{color:var(--late)}
+.line{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}
+.line:last-child{border-bottom:1px solid var(--line)}
+.num{font:600 19px/1.2 var(--display);letter-spacing:.01em}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;padding-block:14px;border-bottom:1px solid var(--line)}
+.btn{border:1px solid var(--ink);padding:9px 14px;font-size:10.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;cursor:pointer}
+.btn:hover:not(:disabled){background:var(--hover)}
+.btn.solid{background:var(--ink);color:var(--paper)}
+.btn.solid:hover:not(:disabled){background:#333}
+.btn.quiet{border-color:var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.wide{width:100%;padding-block:13px}
+
+.board{display:grid;grid-template-columns:minmax(0,3.1fr) minmax(0,4.4fr) minmax(0,3.4fr);border-bottom:1px solid var(--line)}
+.board>section{padding:18px 22px 24px;min-width:0;border-left:1px solid var(--line)}
+.board>section:first-child{padding-left:0;border-left:0}
+.board>section:last-child{padding-right:0}
+.step{font-size:11px;letter-spacing:.09em;text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;gap:12px}
+.step span{color:var(--mute)}
+
+.queue{max-height:560px;overflow:auto;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 12px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);padding:9px 5px;cursor:pointer;align-items:baseline}
+.row:hover{background:var(--hover)}
+.row .nm{font:600 21px/1.15 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.row .t{font-size:12px;font-weight:500}
+.row .sub{grid-column:1/-1;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+.row.sel{background:var(--ink);color:var(--paper)}
+.row.sel .sub{color:rgba(250,250,250,.65)}
+.row.late .t{color:var(--late)}
+.row.sel.late .t{color:#ff8a9c}
+
+.paste{margin-top:18px;display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+label{display:grid;gap:4px}
+textarea,input[type=text]{width:100%;border:1px solid var(--line);padding:8px 9px;font-size:12px;line-height:1.6}
+textarea{resize:vertical;display:block}
+textarea:focus,input:focus{border-color:var(--ink);outline:0}
+input.miss,textarea.miss{border-color:var(--late)}
+
+.who{font:800 34px/1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.stack{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.msg{padding-top:9px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.msg.me{padding-left:24px}
+.read{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;padding-block:9px;border-block:1px solid var(--ink)}
+.checks{margin:6px 0 0;padding:0;list-style:none;counter-reset:c}
+.checks li{counter-increment:c;display:grid;grid-template-columns:24px minmax(0,1fr);padding:3px 0}
+.checks li::before{content:counter(c);color:var(--mute)}
+
+.state{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;padding-block:9px;border-block:1px solid var(--ink)}
+.state.blocked{color:var(--late);border-color:var(--late)}
+.state.na{color:var(--mute);border-color:var(--line)}
+pre{margin:0;padding:10px;border:1px solid var(--line);font:400 11px/1.65 var(--mono);font-stretch:87.5%;white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto}
+
+.record{padding-block:18px 24px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:10px}
+.tab{border:0;padding:0 0 3px;font-size:10.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);cursor:pointer;border-bottom:1px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.feed{max-height:300px;overflow:auto;border-top:1px solid var(--line)}
+.entry{display:grid;grid-template-columns:82px minmax(0,1fr);gap:14px;padding:7px 0;border-bottom:1px solid var(--line)}
+.entry .k{color:var(--mute);font-size:11px}
+.entry.hot span:last-child{color:var(--late)}
+.empty{padding:10px 0;color:var(--mute)}
+
+.map{padding-block:18px 24px;border-bottom:1px solid var(--line)}
+.mrow{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,5fr) minmax(0,3fr);gap:6px 28px;padding:10px 0;border-top:1px solid var(--line)}
+.mrow b{font:600 18px/1.2 var(--display);text-transform:uppercase}
+.mrow .lab{letter-spacing:.05em}
+.foot{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,3fr);gap:24px 56px;padding-top:20px}
+.foot p{max-width:68ch}
+.foot .stack{gap:10px}
+.links{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+
+@media (max-width:1040px){
+  .board{grid-template-columns:minmax(0,1fr)}
+  .board>section,.board>section:first-child,.board>section:last-child{padding:18px 0 22px;border-left:0;border-top:1px solid var(--line)}
+  .board>section:first-child{border-top:0}
+  .queue{max-height:360px}
+  .head{grid-template-columns:minmax(0,1fr)}
+  .mrow{grid-template-columns:minmax(0,1fr)}
+  .foot{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){.top{flex-wrap:wrap}.entry{grid-template-columns:minmax(0,1fr);gap:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Minute One</h1>
+      <p class="lab">TikTok Shop support shift. Simulated.</p>
+      <p class="lab">1 min first reply · 30 open max · 24h follow-ups</p>
+    </div>
+    <span class="stamp" id="clock">09:00:00</span>
+  </header>
+
+  <section class="head">
+    <div>
+      <p class="lab" id="dueLabel">Next reply due</p>
+      <div class="big" id="dueTime" aria-live="off">1:00</div>
+      <p class="lab" id="dueWho"></p>
+    </div>
+    <div id="nums"></div>
+  </section>
+
+  <div class="controls">
+    <button class="btn solid" id="btnAuto">Run on autopilot</button>
+    <button class="btn" id="btnSeat">Take the seat</button>
+    <button class="btn quiet" id="btnPause" disabled>Pause</button>
+    <button class="btn quiet" id="btnReset">Reset</button>
+  </div>
+
+  <div class="board">
+    <section>
+      <h2 class="step">1 / Queue. <span id="qCount"></span></h2>
+      <div class="queue" id="queue"></div>
+      <form class="paste" id="pasteForm">
+        <label for="pasteText"><span class="lab">Or paste any ticket</span>
+          <textarea id="pasteText" rows="3">Spark Codes page keeps failing with a blank screen. Third time this week and I'm blocked.</textarea>
+        </label>
+        <button class="btn quiet" type="submit">Triage it</button>
+      </form>
+    </section>
+    <section id="detail"></section>
+    <section id="gate"></section>
+  </div>
+
+  <section class="record">
+    <h2 class="step">4 / Shift record.</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="radar" aria-selected="true">At risk</button>
+      <button class="tab" role="tab" data-tab="patterns" aria-selected="false">Patterns</button>
+      <button class="tab" role="tab" data-tab="log" aria-selected="false">Log</button>
+    </div>
+    <div class="feed" id="feed"></div>
+  </section>
+
+  <section class="map">
+    <h2 class="step">5 / The job post, line by line.</h2>
+    <div class="mrow"><b>1-minute first response</b><span>Every ticket runs a live clock. Autopilot works VIP first, then severity, then age.</span><span class="lab">Four years of remote frontline support</span></div>
+    <div class="mrow"><b>Linear tickets with shop, ID, contact, issue, page</b><span>Nothing files until every field and the reproduction steps exist.</span><span class="lab">uTest bug reports. Support Triage Console</span></div>
+    <div class="mrow"><b>"The tool is broken" to "here's how it works"</b><span>Splits how-it-works, TikTok rules, setup and real bugs before an engineer gets pulled in.</span><span class="lab">YouVersion. Trust Wallet Africa</span></div>
+    <div class="mrow"><b>At-risk accounts go to CSMs with context</b><span>Cancellation or dispute language writes the handoff note, so the customer never repeats themselves.</span><span class="lab">Escalation handoffs at YouVersion</span></div>
+    <div class="mrow"><b>Feed friction back, keep macros current</b><span>Repeat questions draft a macro and article outline. Repeat bugs merge into one incident.</span><span class="lab">Xiaomi feedback reports. Trust Wallet FAQs</span></div>
+    <div class="mrow"><b>Know TikTok Shop, or learn it fast</b><span>The playbooks here come from public documentation, learned for this project.</span><span class="lab">This page</span></div>
+  </section>
+
+  <footer class="foot">
+    <div class="stack">
+      <p>Triage here is a rule engine, so every decision can be explained. It matches word stems on purpose: on an earlier project "blocked" matched and "blocking" did not, and the most urgent ticket fell to the bottom.</p>
+      <p>I have no access to Reacher's product, so screen names are placeholders and reproductions are scripted. TikTok rules change and some details come from third-party guides, so a real reply would be checked against Seller Center first.</p>
+      <p class="lab">Unofficial project made for a job application. Not affiliated with Reacher or TikTok. All shops, people, IDs and tickets are invented.</p>
+    </div>
+    <div class="stack">
+      <div>
+        <p class="lab ink">Timothy Adetunji</p>
+        <p class="lab">Customer support. UTC+1</p>
+        <ul class="links">
+          <li><a href="https://linkedin.com/in/timztech" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://github.com/whizztimmy" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://xc8jnhmfwn.zite.so" target="_blank" rel="noopener">Support Triage Console</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="lab ink">Sources</p>
+        <ul class="links">
+          <li><a href="https://ads.tiktok.com/help/article/troubleshoot-account-settings-for-gmv-max-in-tiktok-ads-manager" target="_blank" rel="noopener">TikTok: GMV Max settings</a></li>
+          <li><a href="https://ads.tiktok.com/help/article/how-to-request-gmv-max-authorization-in-business-center" target="_blank" rel="noopener">TikTok: GMV Max authorization</a></li>
+          <li><a href="https://support.euka.ai/articles/3767232809-4-spark-codes" target="_blank" rel="noopener">Euka: Spark Codes</a></li>
+          <li><a href="https://help.archive.com/en/articles/10199022-requesting-spark-ads-code" target="_blank" rel="noopener">Archive: Spark Ads codes</a></li>
+          <li><a href="https://support.euka.ai/articles/5716714446-2-sample-requests-auto-approval" target="_blank" rel="noopener">Euka: sample auto-approval</a></li>
+          <li><a href="https://support.euka.ai/articles/7708377837-tiktok-shop-affiliate-terms" target="_blank" rel="noopener">Euka: affiliate terms</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+/*ENGINE*/
+const CHANNELS={app:'In-app',slack:'Slack',wa:'WhatsApp',lark:'Lark'};
+const VERDICTS={educate:'Works as designed',tiktok:'TikTok rule',setup:'Setup fix',bug:'Suspected bug',csm:'CSM handoff',feature:'Feature request'};
+const REQUIRED=[['shop','Shop'],['shopId','Shop ID'],['contact','Contact'],['what',"What's happening"],['page','Page'],['repro','Reproduction steps']];
+
+const PLAYBOOK={
+ spark:{label:'Spark Codes',match:[/spark\s*(code|ad)\w*/g],mech:/expir\w*|inactive|reactivat\w*|unavailable|won'?t authori[sz]\w*/,mechVerdict:'educate',
+  checks:['Check the expiry date on each code','Confirm each post is still public and not deleted','Check whether the ads stopped on the same day the codes lapsed'],
+  reply:{educate:"this looks like code expiry rather than a fault. Spark Codes are time-limited: the creator picks the duration when generating one, the ad stops when it runs out, and an expired code can't be revived. The fix is to ask the creator for a new code and add it back. Happy to go through the others with you so none catch you out."}},
+ gmv:{label:'GMV Max',match:[/gmv\s*max/g],mech:/can'?t find|cannot find|not showing|no shop|empty|missing|don'?t see|doesn'?t appear/,mechVerdict:'setup',
+  checks:['Are the ad account, TikTok account and Shop in the same Business Center?','Is the ad account authorized for GMV Max?','Is a Business Center connected to the Shop?'],
+  reply:{setup:"that usually comes down to Business Center setup. The GMV Max ad account, your TikTok accounts and the Shop all need to sit in the same Business Center, and the ad account needs GMV Max authorization. Could you check those two things? If they all look right, send me a screenshot and I'll dig in from here."}},
+ samples:{label:'Sample approvals',match:[/sample\w*/g,/auto-?approv\w*/g],mech:/how do i|how can i|where do i|manual review/,mechVerdict:'educate',
+  checks:['Is auto-approval or manual review switched on?','Compare the approved creators against the filter','Check when the rule was last edited','Stop further approvals if samples are shipping'],
+  reply:{educate:"you can run sample requests two ways: auto-approval, or manual review of each one. To be selective, set your rule to the creators you want approved and send the rest to manual review. Requests from target collab invites land in the same place, so check those too. I'll stay on this until it's set the way you want."}},
+ outreach:{label:'Outreach',match:[/invit\w*/g,/target collab\w*/g,/outreach/g,/\bdms?\b/g],mech:/limit\w*|so few|only send|\bcap\w*|fewer/,mechVerdict:'tiktok',
+  checks:['Check the invite limit shown in Affiliate Center','Compare the last 30 days of affiliate GMV with the month before','Confirm no invite errors appear in the send history'],
+  reply:{tiktok:"this one comes from TikTok Shop's side. Outreach limits are tied to your affiliate GMV over the last 30 days, so a slower month can lower how many invites you can send. Your current limit is in Affiliate Center. Send me your number and I'll help you decide which creators to prioritize this week."}},
+ automations:{label:'Automations',match:[/automation\w*/g,/workflow\w*/g,/\bpaused?\b/g],mech:/how do i|how can i|where do i/,mechVerdict:'educate',
+  checks:['Read the automation status and last run time','Check whether an outreach limit was reached','Check the shop connection','Compare against another shop on the same plan'],
+  reply:{educate:"here's how that works: each automation runs on its own trigger and conditions, so the settings on that automation decide when it fires. Tell me the result you want and I'll help you set it up."}},
+ integrations:{label:'Integrations',match:[/disconnect\w*/g,/reconnect\w*/g,/integration\w*/g,/re-?auth\w*/g,/\bsync\w*/g],mech:/disconnect\w*|re-?auth\w*|stopped syncing/,mechVerdict:'setup',
+  checks:['Confirm the TikTok Shop authorization is still valid','Note the last successful sync time','Re-authorize, then confirm data resumes'],
+  reply:{setup:"that points to the TikTok Shop connection needing a refresh, since these authorizations can lapse. Please re-authorize the shop from your settings, and new data should start flowing again. Tell me once that's done and I'll check whether the missing days fill in."}},
+ billing:{label:'Billing',match:[/charg\w*/g,/invoic\w*/g,/refund\w*/g,/billing/g,/subscription\w*/g],mech:/how do i|how can i|where do i|invoice/,mechVerdict:'educate',
+  checks:['Pull the invoice and payment history','Look for a plan change or duplicate payment','Log the amount and date for the billing owner'],
+  reply:{educate:"your invoices and plan details are in your billing settings. If anything there looks wrong, send me the invoice number and I'll check it."}},
+ feature:{label:'Feature request',match:[/would love/g,/feature request/g,/\bwish\b/g,/(could|can) you add/g,/ability to/g],mech:/./,mechVerdict:'feature',
+  checks:['Ask what they would do with it','Check for an existing workaround','Log it with shop name and plan'],
+  reply:{feature:"thanks, that's useful. I've logged it for the product team with your use case attached. What would you do with it first? That detail helps it get prioritized."}},
+ general:{label:'General',match:[],mech:/how do i|how can i|where do i/,mechVerdict:'educate',
+  checks:['Ask what they expected to happen','Get a screenshot of the state','Identify which feature is involved'],
+  reply:{educate:"happy to help with this. Could you tell me what you were trying to do and what you expected to see? A screenshot would get me there fastest."}}
+};
+
+const BUG_SIGNAL=/no (error|reason)|without (an? )?(error|reason)|stuck|wrong|shouldn'?t have|should not have|ignor\w+|not working|doesn'?t work|duplicat\w+|crash\w*|blank|spinner|fail\w*|error\w*|\bbugs?\b/;
+const URGENT=/block\w*|launch\w*|\bdown\b|revenue|losing|shipping out|everything|all (of )?(our|my)/;
+const RISKS={
+ cancel:{label:'Cancellation intent',re:/cancel\w*|churn\w*|switch\w* to|not renew\w*|leaving/},
+ dispute:{label:'Disputed charge',re:/disput\w*|chargeback\w*|charged twice|double.?charg\w*|\bbank\b/},
+ frustrated:{label:'Frustrated',re:/tool is broken|ridiculous|unacceptable|third time|fed up|frustrat\w*|useless/}
+};
+
+function triage(text,meta){
+  meta=meta||{};
+  const s=String(text||'').toLowerCase();
+  let cat='general',best=0;
+  for(const k of Object.keys(PLAYBOOK)){
+    let n=0;
+    for(const re of PLAYBOOK[k].match) n+=(s.match(re)||[]).length;
+    if(k==='feature') n*=3;
+    if(n>best){best=n;cat=k}
+  }
+  const risks=Object.keys(RISKS).filter(k=>RISKS[k].re.test(s));
+  const p=PLAYBOOK[cat];
+  let verdict;
+  if(risks.includes('cancel')||risks.includes('dispute')) verdict='csm';
+  else if(p.mech.test(s)) verdict=p.mechVerdict;
+  else if(BUG_SIGNAL.test(s)) verdict='bug';
+  else verdict='educate';
+  const urgent=URGENT.test(s);
+  const severity=(urgent&&verdict==='bug')?'S1':(urgent||meta.vip||risks.length||verdict==='bug')?'S2':'S3';
+  const stuck=/(invit\w*|automation\w*).*(stuck|paused|stopp\w*)|(stuck|paused|stopp\w*).*(invit\w*|automation\w*)/.test(s);
+  let signature=cat+':'+verdict;
+  if(stuck&&verdict==='bug') signature='outreach:invites-paused';
+  else if(cat==='spark'&&verdict==='educate') signature='spark:expired-code';
+  return {cat,catLabel:p.label,verdict,verdictLabel:VERDICTS[verdict],severity,risks,signature,checks:p.checks};
+}
+
+function extract(text){
+  const t=String(text||'');
+  const id=t.match(/\bSIM-\d{3,}\b/i)||t.match(/shop\s*id\s*(?:is|:|#)?\s*([\w-]{4,})/i);
+  const pg=t.match(/\b(?:on|in) (?:the |our |my )?([A-Za-z][A-Za-z -]{2,28}?) (?:page|tab|screen)\b/i)||t.match(/\b([A-Z][A-Za-z ]{2,28}?) (?:page|tab|screen)\b/);
+  return {shopId:id?(id[1]||id[0]).toUpperCase():'',page:pg?pg[1].trim():''};
+}
+
+function missing(t){return REQUIRED.filter(([k])=>!String(t.fields[k]||'').trim()).map(([k,l])=>({key:k,label:l}))}
+
+function draftReply(t){
+  const hi=t.fields.contact?'Hi '+t.fields.contact.split(' ')[0]+', ':'Hi there, ';
+  const p=PLAYBOOK[t.tri.cat],v=t.tri.verdict;
+  if(v==='csm'){
+    if(t.tri.risks.includes('dispute')) return hi+"you're right to raise this, and I'm sorry for the worry. I'm checking the charge now and passing it to the person who can act on it, with all the details, so you won't need to explain it again. You'll hear back from us today.";
+    return hi+"thank you for telling me directly. I don't want you to stay stuck on this. I'm bringing in your customer success manager with the full background, so you won't need to repeat anything, and they'll look at what's holding results back with you.";
+  }
+  if(v==='bug'){
+    const ask=missing(t).filter(m=>m.key==='shopId'||m.key==='page').map(m=>m.label.replace('Page','page'));
+    let r=hi+"thanks for flagging this. That isn't how it should behave, so I'm reproducing it now and taking it to engineering. I'll update you as soon as I have news, and you won't need to chase me.";
+    if(ask.length) r+=" To speed this up, could you send me your "+ask.join(' and the ')+"?";
+    return r;
+  }
+  return hi+(p.reply[v]||PLAYBOOK.general.reply.educate);
+}
+
+function linearBody(t){
+  const f=t.fields;
+  const lines=['['+t.tri.severity+'] '+t.tri.catLabel+': '+(f.what||'').slice(0,70),'',
+   '**Shop:** '+(f.shop||'MISSING'),'**Shop ID:** '+(f.shopId||'MISSING'),'**Contact:** '+(f.contact||'MISSING')+' ('+CHANNELS[t.ch]+')',
+   "**What's happening:** "+(f.what||'MISSING'),'**Page:** '+(f.page||'MISSING'),'','**Steps to reproduce:**',(f.repro||'MISSING')];
+  if(t.linked&&t.linked.length) lines.push('','**Also affected:** '+t.linked.join(', '));
+  return lines.join('\n');
+}
+
+function handoffNote(t){
+  const risk=t.tri.risks.map(k=>RISKS[k].label).join(', ');
+  return ['CSM handoff: '+(t.fields.shop||'Unknown shop'),'Contact: '+(t.fields.contact||'Unknown')+' via '+CHANNELS[t.ch],'Signal: '+risk,
+   'In their words: "'+t.text+'"','Done so far: acknowledged, told them who is picking this up.','Needed from you: reply today.'].join('\n');
+}
+
+const SCRIPT=[
+ {id:'T-1041',at:0,ch:'app',shop:'Lumen Skin Co',shopId:'SIM-48213',contact:'Dana R.',text:"The tool is broken. Three of our Spark Code ads went inactive this morning and nothing changed on our side."},
+ {id:'T-1042',at:0,ch:'wa',vip:true,shop:'Saltline Swim',contact:'Marco V.',text:"Our automation has shown Paused since last night with no reason. No invites have gone out and it's blocking Friday's launch. Stuck on the Automations page.",
+  repro:"1. Open Automations with an active invite automation\n2. Confirm limit not reached in Affiliate Center\n3. Status reads Paused, no error shown\nExpected: running, or a stated reason. Actual: paused, no reason, no sends since last night.",
+  followup:{after:75,text:"Shop ID is SIM-77120.",fields:{shopId:'SIM-77120'}}},
+ {id:'T-1043',at:14,ch:'slack',vip:true,shop:'Kitsune Kitchen',shopId:'SIM-30544',contact:'Aiko T.',text:"Sample auto-approval approved 14 creators under our minimum GMV filter on the Sample Approvals page. Those shouldn't have been approved and samples are shipping out.",
+  repro:"1. Set auto-approval with a minimum creator GMV filter\n2. Submit a request from a creator under the minimum\n3. Request is approved\nExpected: routed to review. Actual: approved, 14 cases."},
+ {id:'T-1044',at:38,ch:'lark',shop:'Hale & Oat',shopId:'SIM-52018',contact:'Lin W.',text:"We can't find our shop when creating a GMV Max campaign. The dropdown is empty."},
+ {id:'T-1045',at:62,ch:'app',shop:'Bright Fern Home',shopId:'SIM-21877',contact:'Priya N.',text:"We were charged twice this month. If this isn't refunded by Friday I'm disputing it with my bank."},
+ {id:'T-1046',at:84,ch:'app',shop:'Northpaw Pet',shopId:'SIM-90311',contact:'Sam O.',text:"Why can I only send so few invites this week? Last month we sent way more."},
+ {id:'T-1047',at:101,ch:'app',shop:'Vanta Hair',contact:'Jo K.',text:"Invites are stuck. Automation says paused with no error on the Automations page, shop ID SIM-19006.",
+  repro:"Same steps as the Saltline Swim report. Reproduced on this shop."},
+ {id:'T-1048',at:118,ch:'wa',vip:true,shop:'Coral Thread',contact:'Tess M.',text:"Also seeing invites stuck since last night, paused with no reason. Shop ID SIM-66312, Automations page.",
+  repro:"Same steps as the Saltline Swim report. Reproduced on this shop."},
+ {id:'T-1049',at:146,ch:'app',shop:'Oak & Ember',shopId:'SIM-40962',contact:'Reece A.',text:"Our shop shows disconnected and data stopped syncing on Tuesday."},
+ {id:'T-1050',at:172,ch:'app',shop:'Mira Candle',shopId:'SIM-11845',contact:'Noor H.',text:"The Spark Code for our top creator went inactive. Can you reactivate it?"},
+ {id:'T-1051',at:199,ch:'app',shop:'Tandem Tea',shopId:'SIM-73390',contact:'Ola B.',text:"Thinking about cancelling. Two months in and creators don't reply to our outreach. Not seeing the ROI."},
+ {id:'T-1052',at:226,ch:'slack',vip:true,shop:'Ferro Footwear',shopId:'SIM-85120',contact:'Elena G.',text:"How do I set sample auto-approval only for creators above 5k followers?"},
+ {id:'T-1053',at:250,ch:'app',shop:'Pine Dental',shopId:'SIM-34409',contact:'Theo F.',text:"Would love the ability to export the creator CRM to CSV."}
+];
+const WAITING=[
+ {id:'T-1033',ch:'app',shop:'Rhea Studio',contact:'Ines C.',waitH:26,text:"I'll send the invoice screenshot when I'm back at my desk."},
+ {id:'T-1036',ch:'lark',shop:'Sunday Press',contact:'Yan L.',waitH:9,text:"Will test the reconnect tomorrow."}
+];
+
+function newShift(){
+  const S={t:0,mode:'idle',running:false,speed:1,tickets:[],nextIdx:0,log:[],pending:[],issues:[],handoffs:[],macros:[],incidents:[],feedback:[],blocked:0,nudged:0,busyUntil:0,working:null,done:false,selected:null,paste:0};
+  WAITING.forEach(w=>S.tickets.push({...w,status:'waiting',wait:true,fields:{},msgs:[{from:'cust',text:w.text}],tri:null,rev:0}));
+  advanceArrivals(S);
+  return S;
+}
+function log(S,text,kind){S.log.unshift({t:S.t,text,kind:kind||''})}
+function arrive(S,src){
+  const ex=extract(src.text);
+  const t={...src,status:'new',arrivedAt:S.t,frt:null,rev:0,gate:null,linked:[],msgs:[{from:'cust',text:src.text}]};
+  t.fields={shop:src.shop||'',shopId:src.shopId||ex.shopId,contact:src.contact||'',what:src.text,page:src.page||ex.page,repro:''};
+  t.tri=triage(src.text,src);
+  t.draft=draftReply(t);
+  S.tickets.push(t);
+  log(S,t.id+' '+(t.fields.shop||'Unknown shop')+' arrived on '+CHANNELS[t.ch]+': '+t.tri.verdictLabel+', '+t.tri.severity);
+  checkPatterns(S,t);
+  return t;
+}
+function advanceArrivals(S){while(S.nextIdx<SCRIPT.length&&SCRIPT[S.nextIdx].at<=S.t){arrive(S,SCRIPT[S.nextIdx]);S.nextIdx++}}
+function checkPatterns(S,t){
+  const same=S.tickets.filter(x=>x.tri&&x.tri.signature===t.tri.signature);
+  const shops=new Set(same.map(x=>x.fields.shop||x.id));
+  if(t.tri.verdict==='bug'&&shops.size>=3&&!S.incidents.find(i=>i.sig===t.tri.signature)){
+    S.incidents.push({sig:t.tri.signature,count:shops.size,at:S.t,title:t.tri.catLabel+': same failure on '+shops.size+' shops'});
+    same.forEach(x=>{x.tri.severity='S1';x.rev++});
+    log(S,'Pattern found: '+shops.size+' shops share one failure. Raised to S1 and treated as one incident.','bad');
+  }
+  if(t.tri.verdict!=='bug'&&t.tri.verdict!=='csm'&&t.tri.verdict!=='feature'&&same.length>=2&&!S.macros.find(m=>m.sig===t.tri.signature)){
+    S.macros.push({sig:t.tri.signature,title:t.tri.catLabel+': macro and help article',body:'Repeat question from '+same.length+' shops. Macro drafted from the reply below. Article outline: what it is, why it happens, how to fix it, how to prevent it.',macro:PLAYBOOK[t.tri.cat].reply[t.tri.verdict]||''});
+    log(S,'Repeat question: macro and article outline drafted for '+t.tri.catLabel+'.','good');
+  }
+}
+function attachRepro(S,t){if(t.repro&&!t.fields.repro){t.fields.repro=t.repro;t.rev++;log(S,t.id+' reproduced, steps attached.')}}
+function escalate(S,t){
+  if(t.gate==='filed') return false;
+  const m=missing(t);
+  if(m.length){
+    if(t.gate!=='blocked') S.blocked++;
+    t.gate='blocked';t.blockedOn=m.map(x=>x.label);t.rev++;
+    log(S,t.id+' escalation blocked. Missing: '+t.blockedOn.join(', ')+'.','bad');
+    return false;
+  }
+  const open=S.issues.find(i=>i.sig===t.tri.signature);
+  if(open&&S.incidents.find(i=>i.sig===t.tri.signature)){
+    open.linked.push(t.fields.shop);
+    const host=S.tickets.find(x=>x.id===open.ticket); if(host){host.linked.push(t.fields.shop);host.rev++}
+    t.gate='filed';t.issue=open.key;t.rev++;
+    log(S,t.id+' linked to '+open.key+'. No duplicate ticket filed.','good');
+    return true;
+  }
+  const key='ENG-'+(2201+S.issues.length);
+  S.issues.push({key,sig:t.tri.signature,ticket:t.id,linked:[]});
+  t.gate='filed';t.issue=key;t.rev++;
+  log(S,t.id+' passed the gate. Filed '+key+'.','good');
+  return true;
+}
+function sendReply(S,t,text){
+  if(t.frt!=null||t.wait) return;
+  t.frt=S.t-t.arrivedAt;
+  t.msgs.push({from:'me',text:text==null?t.draft:text});
+  log(S,t.id+' first reply in '+fmtDur(t.frt)+(t.frt>60?' (over target)':''),t.frt>60?'bad':'');
+  const v=t.tri.verdict;
+  if(v==='csm'){
+    t.status='handed';t.note=handoffNote(t);S.handoffs.push(t.id);
+    log(S,t.id+' handed to CSM with context.','good');
+  } else if(v==='bug'){
+    t.status='investigating';
+    if(t.followup) S.pending.push({at:S.t+t.followup.after,id:t.id});
+    if(S.mode==='auto'){attachRepro(S,t);escalate(S,t)}
+  } else {
+    t.status='resolved';
+    if(v==='feature'){S.feedback.push({shop:t.fields.shop,text:t.text});log(S,t.id+' logged for product.')}
+  }
+  t.rev++;
+}
+function nudge(S,t){t.nudged=true;t.rev++;S.nudged++;log(S,t.id+' 24-hour follow-up sent.')}
+function byPriority(a,b){return (b.vip?1:0)-(a.vip?1:0)||(a.tri.severity>b.tri.severity?1:a.tri.severity<b.tri.severity?-1:0)||a.arrivedAt-b.arrivedAt}
+function handleTime(t){return 11+Math.round(t.text.length/22)}
+function tick(S,dt){
+  if(S.done) return;
+  S.t+=dt;
+  advanceArrivals(S);
+  S.pending=S.pending.filter(p=>{
+    if(p.at>S.t) return true;
+    const t=S.tickets.find(x=>x.id===p.id);
+    t.msgs.push({from:'cust',text:t.followup.text});
+    Object.assign(t.fields,t.followup.fields);t.rev++;
+    log(S,t.id+' customer sent the missing detail.');
+    if(S.mode==='auto'){attachRepro(S,t);escalate(S,t)}
+    return false;
+  });
+  if(S.mode==='auto'){
+    if(S.working&&S.t>=S.busyUntil){sendReply(S,S.working,null);S.working=null}
+    if(!S.working){
+      const due=S.tickets.find(t=>t.wait&&t.waitH>=24&&!t.nudged);
+      if(due) nudge(S,due);
+      const q=S.tickets.filter(t=>t.status==='new').sort(byPriority);
+      if(q.length){S.working=q[0];S.busyUntil=S.t+handleTime(q[0]);S.selected=q[0].id}
+    }
+  }
+  const open=S.tickets.some(t=>t.status==='new');
+  if(S.nextIdx>=SCRIPT.length&&!open&&!S.working&&!S.pending.length){S.done=true;S.running=false}
+}
+function median(a){if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
+function stats(S){
+  const frts=S.tickets.filter(t=>t.frt!=null).map(t=>t.frt);
+  return {median:median(frts),replied:frts.length,under:frts.filter(x=>x<=60).length,
+    open:S.tickets.filter(t=>!['resolved','handed'].includes(t.status)).length,
+    due:S.tickets.filter(t=>t.wait&&t.waitH>=24&&!t.nudged).length,
+    blocked:S.blocked,issues:S.issues.length,handoffs:S.handoffs.length};
+}
+function fmtDur(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+/*END*/
+</script>
+
+<script>
+let S=newShift(),tab='radar',detailKey='',gateKey='',feedKey='',last=performance.now();
+S.selected='T-1042';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cur=()=>S.tickets.find(t=>t.id===S.selected);
+const STATUS={new:'New',investigating:'With engineering',resolved:'Resolved',handed:'With CSM',waiting:'Waiting on customer'};
+const seat=()=>!(S.mode==='auto'&&S.running);
+const setBig=(label,value,who,late)=>{$('dueLabel').textContent=label;$('dueTime').textContent=value;$('dueTime').classList.toggle('late',!!late);$('dueWho').textContent=who};
+
+function renderHead(){
+  const k=stats(S),pct=k.replied?Math.round(k.under/k.replied*100):null;
+  if(S.done){
+    const late=k.replied-k.under;
+    setBig(S.mode==='auto'?'Autopilot shift closed. Under a minute':'Your shift closed. Under a minute',k.under+'/'+k.replied,
+      'Median '+fmtDur(k.median||0)+' · '+k.blocked+' incomplete escalation'+(k.blocked===1?'':'s')+' stopped'+(late?' · review the '+late+' over target':''),false);
+  } else {
+    const next=S.tickets.filter(t=>t.status==='new').sort(byPriority)[0];
+    if(next){
+      const left=60-(S.t-next.arrivedAt);
+      setBig(left<0?'Over target':'Next reply due',(left<0?'+':'')+fmtDur(Math.abs(left)),[next.shop||'Unknown shop',next.vip?'VIP':'',CHANNELS[next.ch]].filter(Boolean).join(' · '),left<0);
+    } else setBig('Next reply due','-:--','Queue clear',false);
+  }
+  const line=(l,v,target,late)=>`<div class="line"><span class="lab">${l}</span><span class="num ${late?'late':''}">${v}${target?` <span class="lab">${target}</span>`:''}</span></div>`;
+  $('nums').innerHTML=
+    line('Median first reply',k.median==null?'-':fmtDur(k.median),'/ 1:00',k.median>60)+
+    line('Under one minute',pct==null?'-':pct+'%','',false)+
+    line('Open tickets',k.open,'/ 30',k.open>=30)+
+    line('Follow-ups due',k.due,'',false)+
+    line('Escalations blocked',k.blocked,'',false)+
+    line('Linear tickets',k.issues,'',false)+
+    line('CSM handoffs',k.handoffs,'',false);
+}
+function renderQueue(){
+  const live=S.tickets.filter(t=>t.status==='new').sort(byPriority);
+  const rest=S.tickets.filter(t=>t.status!=='new').reverse();
+  $('qCount').textContent=live.length+' waiting';
+  const prev=$('queue').scrollTop;
+  $('queue').innerHTML=[...live,...rest].map(t=>{
+    let cls='',time='';
+    if(t.status==='new'){
+      const left=60-(S.t-t.arrivedAt);
+      if(left<0) cls='late';
+      time=(left<0?'+':'')+fmtDur(Math.abs(left));
+    } else if(t.wait){time=t.nudged?'Nudged':t.waitH+'H'}
+    else time=fmtDur(t.frt||0);
+    const lab=t.wait?'Waiting on customer':t.tri.catLabel+' · '+STATUS[t.status];
+    return `<button class="row ${cls} ${t.id===S.selected?'sel':''}" data-id="${esc(t.id)}"><span class="nm">${esc(t.shop||'Unknown shop')}</span><span class="t">${time}</span><span class="sub">${t.vip?'VIP · ':''}${CHANNELS[t.ch]} · ${esc(lab)}</span></button>`;
+  }).join('');
+  $('queue').scrollTop=prev;
+}
+function renderDetail(){
+  const t=cur();
+  const key=(t?t.id+':'+t.rev+':'+t.status:'')+':'+(seat()?1:0);
+  if(key===detailKey) return; detailKey=key;
+  const head='<h2 class="step">2 / Ticket.'+(t?` <span>${esc(t.id)}</span>`:'')+'</h2>';
+  if(!t){$('detail').innerHTML=head+'<p class="mute">Select a ticket.</p>';return}
+  const thread=t.msgs.map(m=>`<div class="msg ${m.from==='me'?'me':''}"><p class="lab">${m.from==='me'?'You':esc(t.contact||'Customer')}</p>${esc(m.text)}</div>`).join('');
+  let body='';
+  if(t.wait){
+    body=`<p>Waiting on the customer for ${t.waitH} hours. The job post sets a 24-hour follow-up.</p>${t.waitH>=24&&!t.nudged?`<button class="btn solid wide" id="btnNudge" ${seat()?'':'disabled'}>Send follow-up</button>`:''}`;
+  } else {
+    const tr=t.tri;
+    const read=[tr.catLabel,tr.verdictLabel,tr.severity,...tr.risks.map(k=>RISKS[k].label)].join(' · ');
+    body=`<p class="read">${esc(read)}</p><div><p class="lab">Check first</p><ol class="checks">${tr.checks.map(c=>`<li>${esc(c)}</li>`).join('')}</ol></div>`;
+    if(t.status==='new') body+=`<label for="draft"><span class="lab">Draft reply. Edit, then send.</span><textarea id="draft" rows="7">${esc(t.draft)}</textarea></label>
+      <button class="btn solid wide" id="btnSend" ${seat()?'':'disabled'}>Send reply</button>`;
+  }
+  $('detail').innerHTML=`${head}<div class="stack"><div><p class="who">${esc(t.shop||'Unknown shop')}</p><p class="lab">${[t.vip?'VIP':'',CHANNELS[t.ch],STATUS[t.status]].filter(Boolean).join(' · ')}</p></div><div class="stack">${thread}</div>${body}</div>`;
+  const d=$('draft'); if(d) d.oninput=()=>{t.draft=d.value};
+  const b=$('btnSend'); if(b) b.onclick=()=>{sendReply(S,t,t.draft);renderAll()};
+  const n=$('btnNudge'); if(n) n.onclick=()=>{nudge(S,t);renderAll()};
+}
+function gateState(t){
+  const m=missing(t);
+  return m.length?`<p class="state blocked">Blocked. Missing: ${esc(m.map(x=>x.label).join(', '))}</p>`:'<p class="state">All fields present. Ready to file.</p>';
+}
+function renderGate(){
+  const t=cur();
+  const key=(t?t.id+':'+t.rev+':'+t.gate+':'+t.status:'')+':'+(seat()?1:0);
+  if(key===gateKey) return; gateKey=key;
+  const el=$('gate');
+  const shell=(title,inner)=>`<h2 class="step">3 / ${title}</h2><div class="stack">${inner}</div>`;
+  if(!t||t.wait){el.innerHTML=shell('Next step.','<p class="state na">Nothing to escalate on this ticket.</p>');return}
+  const v=t.tri.verdict;
+  if(v==='csm'){
+    el.innerHTML=shell('CSM handoff.',`<p class="state ${t.note?'':'na'}">${t.note?'Handed over with context':'Goes out when you reply'}</p><pre id="noteOut">${esc(t.note||handoffNote(t))}</pre><button class="btn quiet" id="btnCopy">Copy note</button>`);
+    bindCopy('noteOut');return;
+  }
+  if(v!=='bug'){
+    const msg=v==='feature'?'Logged for product. No engineering ticket needed.':'No engineering ticket needed. The fix is in the reply.';
+    el.innerHTML=shell('Next step.',`<p class="state na">${msg}</p>`);return;
+  }
+  const miss=new Set(missing(t).map(x=>x.key)),filed=t.gate==='filed';
+  const state=filed?`<p class="state">Filed as ${esc(t.issue)}${t.linked.length?' · '+t.linked.length+' more '+(t.linked.length===1?'shop':'shops')+' linked':''}</p>`:gateState(t);
+  const fields=REQUIRED.map(([k,l])=>{
+    const c=miss.has(k)?'miss':'';
+    return (k==='what'||k==='repro')?`<label for="f_${k}"><span class="lab">${l}</span><textarea id="f_${k}" data-k="${k}" rows="${k==='repro'?4:2}" class="${c}">${esc(t.fields[k])}</textarea></label>`
+      :`<label for="f_${k}"><span class="lab">${l}</span><input type="text" id="f_${k}" data-k="${k}" class="${c}" value="${esc(t.fields[k])}"></label>`;
+  }).join('');
+  el.innerHTML=shell('Linear gate.',state+(filed?`<pre id="linOut">${esc(linearBody(t))}</pre><button class="btn quiet" id="btnCopy">Copy ticket</button>`
+    :fields+(t.repro&&!t.fields.repro?`<button class="btn quiet" id="btnRepro" ${seat()?'':'disabled'}>Reproduce (scripted)</button>`:'')+`<button class="btn solid wide" id="btnFile" ${seat()?'':'disabled'}>File ticket</button>`));
+  if(filed){bindCopy('linOut');return}
+  el.querySelectorAll('[data-k]').forEach(i=>i.oninput=()=>{t.fields[i.dataset.k]=i.value;i.classList.toggle('miss',!i.value.trim());el.querySelector('.state').outerHTML=gateState(t)});
+  const r=$('btnRepro'); if(r) r.onclick=()=>{attachRepro(S,t);renderAll()};
+  $('btnFile').onclick=()=>{escalate(S,t);renderAll()};
+}
+function bindCopy(id){
+  $('btnCopy').onclick=async e=>{
+    const b=e.currentTarget;
+    try{await navigator.clipboard.writeText($(id).textContent);b.textContent='Copied'}
+    catch(_){const r=document.createRange();r.selectNodeContents($(id));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected. Press Ctrl+C'}
+  };
+}
+function entry(k,v,hot){return `<div class="entry ${hot?'hot':''}"><span class="k">${esc(k)}</span><span>${esc(v)}</span></div>`}
+function renderFeed(){
+  const key=tab+':'+S.log.length+':'+S.macros.length+':'+S.incidents.length+':'+S.tickets.length;
+  if(key===feedKey) return; feedKey=key;
+  let h='';
+  if(tab==='radar'){
+    const list=S.tickets.filter(t=>t.tri&&t.tri.risks.length);
+    h=list.map(t=>entry(t.id,(t.fields.shop||'Unknown shop')+': '+t.tri.risks.map(k=>RISKS[k].label).join(', ')+'. '+STATUS[t.status]+'.')).join('')||'<p class="empty">No at-risk accounts yet.</p>';
+  } else if(tab==='patterns'){
+    const a=S.incidents.map(i=>entry('Incident',i.title+'. Raised to S1, one Linear ticket, every shop linked.'));
+    const b=S.macros.map(m=>entry('Macro',m.title+'. '+m.body+' '+m.macro));
+    const c=S.feedback.map(f=>entry('Product',f.shop+': '+f.text));
+    h=[...a,...b,...c].join('')||'<p class="empty">Nothing repeating yet. Run the shift.</p>';
+  } else {
+    h=S.log.map(l=>entry(clockAt(l.t),l.text,l.kind==='bad')).join('');
+  }
+  $('feed').innerHTML=h;
+}
+function clockAt(t){const s=9*3600+Math.round(t);return [s/3600|0,(s%3600)/60|0,s%60].map(x=>String(x).padStart(2,'0')).join(':')}
+function renderAll(){
+  $('clock').textContent=clockAt(S.t);
+  $('btnPause').disabled=S.done||S.mode==='idle';
+  $('btnPause').textContent=S.running||S.mode==='idle'?'Pause':'Resume';
+  renderHead();renderQueue();renderDetail();renderGate();renderFeed();
+}
+function loop(){
+  const now=performance.now(),dt=(now-last)/1000;last=now;
+  if(S.running){tick(S,Math.min(dt,1)*S.speed);renderAll()}
+}
+function reset(){S=newShift();S.selected='T-1042';detailKey=gateKey=feedKey='';renderAll()}
+function start(mode,speed){
+  if(S.mode!=='idle'||S.done) reset();
+  S.mode=mode;S.speed=speed;S.running=true;last=performance.now();renderAll();
+}
+$('btnAuto').onclick=()=>start('auto',6);
+$('btnSeat').onclick=()=>start('seat',1);
+$('btnPause').onclick=()=>{S.running=!S.running;last=performance.now();renderAll()};
+$('btnReset').onclick=reset;
+$('queue').onclick=e=>{const r=e.target.closest('.row');if(r){S.selected=r.dataset.id;renderAll()}};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));feedKey='';renderFeed()});
+$('pasteForm').onsubmit=e=>{
+  e.preventDefault();
+  const text=$('pasteText').value.trim();if(!text)return;
+  S.paste++;
+  const t=arrive(S,{id:'P-'+S.paste,ch:'app',text});
+  S.selected=t.id;renderAll();
+};
+renderAll();
+setInterval(loop,200);
+</script>
+</body>
+</html>
